@@ -1,1 +1,187 @@
-# sports-cat
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sports Cat - Deportes en Vivo</title>
+  <style>
+    :root {
+      --bg-color: #0b0e14;
+      --card-bg: #161b22;
+      --text-main: #ffffff;
+      --text-muted: #8b949e;
+      --accent-green: #2ea043;
+      --border-color: #30363d;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    header {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 20px;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-badge {
+      background: #ffffff;
+      color: #000000;
+      font-weight: bold;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      letter-spacing: 1px;
+    }
+
+    h1 {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: var(--accent-green);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--accent-green);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent-green);
+    }
+
+    .main-container {
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .match-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .match-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .teams {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .team {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 500;
+    }
+
+    .score {
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+
+    .no-events {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo-container">
+      <div class="logo-badge">SPORTS CAT</div>
+    </div>
+    <div class="status-badge">
+      <div class="dot"></div>
+      <span>EN VIVO</span>
+    </div>
+  </header>
+
+  <div class="main-container" id="app">
+    <div class="no-events">Cargando partidos en vivo de la API...</div>
+  </div>
+
+  <script>
+    async function cargarPartidos() {
+      const app = document.getElementById('app');
+      try {
+        const res = await fetch('https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=2026-10-13');
+        const data = await res.json();
+        
+        if (!data.events || data.events.length === 0) {
+          app.innerHTML = '<div class="no-events">No hay eventos transmitiéndose en este momento.</div>';
+          return;
+        }
+
+        app.innerHTML = '';
+        data.events.slice(0, 5).forEach(event => {
+          const card = document.createElement('div');
+          card.className = 'match-card';
+          card.innerHTML = `
+            <div class="match-header">
+              <span>${event.strSport || 'Deporte'} - ${event.strLeague || 'Liga'}</span>
+              <span>${event.strStatus || 'Programado'}</span>
+            </div>
+            <div class="teams">
+              <div class="team">
+                <span>${event.strHomeTeam}</span>
+                <span class="score">${event.intHomeScore ?? '-'}</span>
+              </div>
+              <div class="team">
+                <span>${event.strAwayTeam}</span>
+                <span class="score">${event.intAwayScore ?? '-'}</span>
+              </div>
+            </div>
+          `;
+          app.appendChild(card);
+        });
+
+      } catch (err) {
+        app.innerHTML = '<div class="no-events">Error de conexión con el servidor de deportes.</div>';
+      }
+    }
+
+    cargarPartidos();
+  </script>
+</body>
+</html>
