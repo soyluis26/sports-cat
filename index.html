@@ -2,399 +2,160 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Sports Cat - Resultados en Vivo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10131c">
+  <title>Sports Cat 🐱</title>
   <style>
-    :root {
-      --bg-main: #090d16;
-      --bg-card: #121824;
-      --bg-card-hover: #1a2234;
-      --border-color: #1e283d;
-      --accent-green: #00e676;
-      --accent-orange: #ff9f0a;
-      --accent-blue: #29b6f6;
-      --text-white: #ffffff;
-      --text-muted: #8d9bb0;
-      --text-sub: #5c6b80;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-    }
-
+    * { box-sizing: border-box; }
     body {
-      background-color: var(--bg-main);
-      color: var(--text-white);
-      padding-bottom: 75px;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      margin: 0;
+      background: #10131c;
+      color: #f5f7ff;
+      font-family: Arial, sans-serif;
     }
-
     header {
-      width: 100%;
-      max-width: 680px;
-      background: rgba(9, 13, 22, 0.95);
-      backdrop-filter: blur(12px);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      padding: 12px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border-color);
+      padding: 22px 16px;
+      background: #191e2b;
+      border-bottom: 2px solid #ff8a24;
     }
-
-    .brand-badge {
-      background: linear-gradient(135deg, #ff9f0a, #ff5e3a);
-      color: #000;
-      font-weight: 900;
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      letter-spacing: 1.2px;
-    }
-
-    .live-badge {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.72rem;
-      font-weight: 700;
-      color: var(--accent-green);
-      background: rgba(0, 230, 118, 0.12);
-      padding: 4px 10px;
-      border-radius: 20px;
-      border: 1px solid rgba(0, 230, 118, 0.25);
-    }
-
-    .pulse-dot {
-      width: 6px;
-      height: 6px;
-      background-color: var(--accent-green);
-      border-radius: 50%;
-      box-shadow: 0 0 8px var(--accent-green);
-      animation: pulse 1.4s infinite;
-    }
-
-    @keyframes pulse {
-      0% { transform: scale(0.9); opacity: 0.7; }
-      50% { transform: scale(1.3); opacity: 1; }
-      100% { transform: scale(0.9); opacity: 0.7; }
-    }
-
-    .date-bar {
-      width: 100%;
-      max-width: 680px;
-      display: flex;
-      justify-content: space-around;
-      background: var(--bg-card);
-      border-bottom: 1px solid var(--border-color);
-      padding: 8px 0;
-    }
-
-    .date-btn {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-size: 0.8rem;
-      font-weight: 600;
-      padding: 6px 16px;
-      border-radius: 16px;
-      cursor: pointer;
-    }
-
-    .date-btn.active {
-      background: rgba(255, 159, 10, 0.15);
-      color: var(--accent-orange);
-    }
-
-    .sports-nav {
-      width: 100%;
-      max-width: 680px;
-      overflow-x: auto;
-      white-space: nowrap;
-      padding: 10px 16px;
-      scrollbar-width: none;
-    }
-    .sports-nav::-webkit-scrollbar { display: none; }
-
-    .sport-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      color: var(--text-muted);
-      padding: 7px 14px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      margin-right: 6px;
-      cursor: pointer;
-    }
-
-    .sport-chip.active {
-      background: var(--accent-orange);
-      color: #000;
-      border-color: var(--accent-orange);
-    }
-
-    main {
-      width: 100%;
-      max-width: 680px;
-      padding: 0 12px;
-    }
-
-    .league-group {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
+    h1 { margin: 0; color: #ff9638; }
+    header p { margin-bottom: 0; color: #b9c0d2; }
+    main { max-width: 850px; margin: auto; padding: 16px; }
+    .panel {
+      background: #191e2b;
+      border: 1px solid #30394b;
       border-radius: 14px;
-      margin-bottom: 12px;
-      overflow: hidden;
+      padding: 16px;
+      margin: 14px 0;
     }
-
-    .league-header {
-      background: rgba(255, 255, 255, 0.03);
-      padding: 10px 14px;
+    button, select {
+      background: #ff8a24;
+      color: #11131a;
+      border: 0;
+      border-radius: 9px;
+      padding: 12px;
+      font-weight: bold;
+      font-size: 15px;
+    }
+    button { cursor: pointer; }
+    select { max-width: 100%; }
+    .muted { color: #aab3c7; }
+    .match {
+      background: #22293a;
+      border-radius: 10px;
+      padding: 14px;
+      margin-top: 10px;
+    }
+    .score {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid var(--border-color);
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: var(--text-white);
-    }
-
-    .match-item {
-      padding: 12px 14px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-      display: flex;
-      flex-direction: column;
       gap: 8px;
-      cursor: pointer;
+      font-size: 17px;
+      font-weight: bold;
     }
-
-    .match-item:last-child { border-bottom: none; }
-
-    .match-main-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .match-teams {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .team-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 0.9rem;
-      font-weight: 600;
-    }
-
-    .team-logo {
-      width: 22px;
-      height: 22px;
-      object-fit: contain;
-      border-radius: 4px;
-    }
-
-    .match-status-box {
-      min-width: 75px;
-      text-align: right;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 4px;
-    }
-
-    .score-text {
-      font-weight: 800;
-      font-size: 1rem;
-      color: var(--text-white);
-    }
-
-    .status-text {
-      font-size: 0.7rem;
-      font-weight: 700;
-      color: var(--text-muted);
-    }
-
-    .status-text.live {
-      color: var(--accent-green);
-    }
-
-    .cat-insight {
-      background: rgba(255, 159, 10, 0.08);
-      border-left: 3px solid var(--accent-orange);
-      padding: 6px 10px;
-      border-radius: 4px;
-      font-size: 0.73rem;
-      color: #ffd280;
-    }
-
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-      max-width: 680px;
-      background: rgba(18, 24, 36, 0.98);
-      backdrop-filter: blur(10px);
-      border-top: 1px solid var(--border-color);
-      display: flex;
-      justify-content: space-around;
-      padding: 8px 0;
-      z-index: 1000;
-    }
-
-    .nav-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-      color: var(--text-muted);
-      font-size: 0.68rem;
-      font-weight: 600;
-    }
-
-    .nav-item.active {
-      color: var(--accent-orange);
-    }
+    .status { color: #ffad5c; font-size: 12px; }
+    a { color: #ffad5c; }
   </style>
 </head>
 <body>
-
-  <header>
-    <div class="brand-badge">SPORTS CAT</div>
-    <div class="live-badge">
-      <div class="pulse-dot"></div>
-      <span>EN VIVO</span>
-    </div>
-  </header>
-
-  <div class="date-bar">
-    <button class="date-btn" onclick="cambiarFecha('ayer', this)">Ayer</button>
-    <button class="date-btn active" onclick="cambiarFecha('hoy', this)">HOY</button>
-    <button class="date-btn" onclick="cambiarFecha('manana', this)">Mañana</button>
+<header>
+  <h1>🐱 Sports Cat</h1>
+  <p>Tu centro internacional de deportes en vivo</p>
+</header>
+<main>
+  <div class="panel">
+    <h2>Partidos y resultados</h2>
+    <p class="muted">Consulta encuentros de fútbol, NBA, MLB y NFL.</p>
+    <label for="sport">Deporte: </label>
+    <select id="sport">
+      <option value="soccer">Fútbol</option>
+      <option value="basketball">NBA</option>
+      <option value="baseball">MLB</option>
+      <option value="football">NFL</option>
+    </select>
+    <p><button id="refresh">Actualizar resultados</button></p>
+    <p id="status" class="muted">Preparando conexión...</p>
   </div>
-
-  <div class="sports-nav">
-    <div class="sport-chip active" onclick="filtrarDeporte('all', this)">⚡ Todos</div>
-    <div class="sport-chip" onclick="filtrarDeporte('baseball', this)">⚾ MLB</div>
-    <div class="sport-chip" onclick="filtrarDeporte('basketball', this)">🏀 NBA</div>
-    <div class="sport-chip" onclick="filtrarDeporte('soccer', this)">⚽ Fútbol</div>
-    <div class="sport-chip" onclick="filtrarDeporte('football', this)">🏈 NFL</div>
+  <section id="matches"></section>
+  <div class="panel">
+    <h3>Sobre Sports Cat</h3>
+    <p class="muted">Proyecto en desarrollo. Los resultados dependen de la disponibilidad de las fuentes de datos.</p>
   </div>
+</main>
+<script>
+const API = "https://site.api.espn.com/apis/site/v2/sports";
+const sports = {
+  soccer: { path: "soccer/eng.1", label: "Fútbol" },
+  basketball: { path: "basketball/nba", label: "NBA" },
+  baseball: { path: "baseball/mlb", label: "MLB" },
+  football: { path: "football/nfl", label: "NFL" }
+};
 
-  <main id="app">
-    <!-- Carga instantánea -->
-  </main>
+async function loadMatches() {
+  const selector = document.getElementById("sport");
+  const sport = sports[selector.value];
+  const status = document.getElementById("status");
+  const container = document.getElementById("matches");
+  status.textContent = "Cargando resultados...";
+  container.innerHTML = "";
 
-  <nav class="bottom-nav">
-    <div class="nav-item active">
-      <span style="font-size: 1.2rem;">⚽</span>
-      <span>Partidos</span>
-    </div>
-    <div class="nav-item">
-      <span style="font-size: 1.2rem;">⭐</span>
-      <span>Favoritos</span>
-    </div>
-  </nav>
+  try {
+    const response = await fetch(
+      `${API}/${sport.path}/scoreboard`
+    );
+    if (!response.ok) throw new Error("Fuente no disponible");
+    const data = await response.json();
+    const events = data.events || [];
 
-  <script>
-    var fechaActualKey = 'hoy';
-    var deporteFiltroActual = 'all';
-
-    // Base de datos de respaldo robusta y limpia con escudos oficiales
-    var baseDeDatosLocal = {
-      'hoy': [
-        { id: 'm1', deporteKey: 'baseball', ligaNombre: 'Major League Baseball', equipoLocal: 'Guardians', logoLocal: 'https://a.espncdn.com/i/teamlogos/mlb/50/cle.png', puntosLocal: '3', equipoVisitante: 'Rays', logoVisitante: 'https://a.espncdn.com/i/teamlogos/mlb/50/tb.png', puntosVisitante: '1', estado: 'Top 7th', esEnVivo: true, insight: 'Rays domina la serie particular con efectividad en bullpen.' },
-        { id: 'm2', deporteKey: 'baseball', ligaNombre: 'Major League Baseball', equipoLocal: 'Yankees', logoLocal: 'https://a.espncdn.com/i/teamlogos/mlb/50/nyy.png', puntosLocal: '5', equipoVisitante: 'Red Sox', logoVisitante: 'https://a.espncdn.com/i/teamlogos/mlb/50/bos.png', puntosVisitante: '4', estado: 'Final', esEnVivo: false, insight: 'Clásico de la división este decidido en entradas extras.' },
-        { id: 'n1', deporteKey: 'basketball', ligaNombre: 'NBA', equipoLocal: 'Cavaliers', logoLocal: 'https://a.espncdn.com/i/teamlogos/nba/50/cle.png', puntosLocal: '88', equipoVisitante: 'Magic', logoVisitante: 'https://a.espncdn.com/i/teamlogos/nba/50/orl.png', puntosVisitante: '85', estado: '4th Qtr', esEnVivo: true, insight: 'Cavaliers ajusta la defensa perimetral para asegurar la ventaja.' },
-        { id: 'n2', deporteKey: 'basketball', ligaNombre: 'NBA', equipoLocal: 'Lakers', logoLocal: 'https://a.espncdn.com/i/teamlogos/nba/50/lal.png', puntosLocal: '112', equipoVisitante: 'Warriors', logoVisitante: 'https://a.espncdn.com/i/teamlogos/nba/50/gs.png', puntosVisitante: '115', estado: 'Final', esEnVivo: false, insight: 'Intenso duelo de triples definido en los últimos segundos.' },
-        { id: 'f1', deporteKey: 'soccer', ligaNombre: 'MLS / Fútbol', equipoLocal: 'Inter Miami', logoLocal: 'https://a.espncdn.com/i/teamlogos/soccer/50/18258.png', puntosLocal: '2', equipoVisitante: 'LA Galaxy', logoVisitante: 'https://a.espncdn.com/i/teamlogos/soccer/50/187.png', puntosVisitante: '1', estado: '82\'', esEnVivo: true, insight: 'Presión alta de Inter Miami en el tramo final del partido.' }
-      ],
-      'ayer': [
-        { id: 'ay1', deporteKey: 'baseball', ligaNombre: 'Major League Baseball', equipoLocal: 'Astros', logoLocal: 'https://a.espncdn.com/i/teamlogos/mlb/50/hou.png', puntosLocal: '4', equipoVisitante: 'Rangers', logoVisitante: 'https://a.espncdn.com/i/teamlogos/mlb/50/tex.png', puntosVisitante: '2', estado: 'Final', esEnVivo: false, insight: 'Gran labor monticular del abridor local.' }
-      ],
-      'manana': [
-        { id: 'mn1', deporteKey: 'baseball', ligaNombre: 'Major League Baseball', equipoLocal: 'Braves', logoLocal: 'https://a.espncdn.com/i/teamlogos/mlb/50/atl.png', puntosLocal: '-', equipoVisitante: 'Phillies', logoVisitante: 'https://a.espncdn.com/i/teamlogos/mlb/50/phi.png', puntosVisitante: '-', estado: '7:05 PM', esEnVivo: false, insight: 'Duelo divisional de pronóstico reservado.' }
-      ]
-    };
-
-    function renderizar() {
-      var app = document.getElementById('app');
-      if (!app) return;
-
-      var lista = baseDeDatosLocal[fechaActualKey] || [];
-      if (deporteFiltroActual !== 'all') {
-        lista = lista.filter(function(e) { return e.deporteKey === deporteFiltroActual; });
-      }
-
-      if (lista.length === 0) {
-        app.innerHTML = '<div style="text-align:center; padding:40px; color:#8d9bb0;">No hay eventos para este filtro.</div>';
-        return;
-      }
-
-      var grupos = {};
-      lista.forEach(function(item) {
-        if (!grupos[item.ligaNombre]) grupos[item.ligaNombre] = [];
-        grupos[item.ligaNombre].push(item);
-      });
-
-      var htmlFinal = '';
-      for (var liga in grupos) {
-        htmlFinal += '<div class="league-group"><div class="league-header"><span>🏆 ' + liga + '</span></div>';
-        grupos[liga].forEach(function(m) {
-          htmlFinal += '<div class="match-item">' +
-            '<div class="match-main-row">' +
-              '<div class="match-teams">' +
-                '<div class="team-row"><img class="team-logo" src="' + m.logoVisitante + '"><span>' + m.equipoVisitante + '</span></div>' +
-                '<div class="team-row"><img class="team-logo" src="' + m.logoLocal + '"><span>' + m.equipoLocal + '</span></div>' +
-              '</div>' +
-              '<div class="match-status-box">' +
-                '<div class="score-text">' + m.puntosVisitante + ' - ' + m.puntosLocal + '</div>' +
-                '<div class="status-text ' + (m.esEnVivo ? 'live' : '') + '">' + (m.esEnVivo ? '🔴 ' + m.estado : m.estado) + '</div>' +
-              '</div>' +
-            '</div>' +
-            '<div class="cat-insight">💡 ' + m.insight + '</div>' +
-          '</div>';
-        });
-        htmlFinal += '</div>';
-      }
-
-      app.innerHTML = htmlFinal;
+    if (!events.length) {
+      status.textContent = "No hay partidos disponibles ahora.";
+      return;
     }
 
-    function cambiarFecha(key, btn) {
-      document.querySelectorAll('.date-btn').forEach(function(b) { b.classList.remove('active'); });
-      btn.classList.add('active');
-      fechaActualKey = key;
-      renderizar();
-    }
+    status.textContent = `${events.length} encuentros encontrados`;
+    events.forEach(event => {
+      const competitors =
+        event.competitions?.[0]?.competitors || [];
+      const home = competitors.find(t => t.homeAway === "home");
+      const away = competitors.find(t => t.homeAway === "away");
+      const date = event.date
+        ? new Date(event.date).toLocaleString("es")
+        : "Horario no disponible";
+      const state = event.status?.type?.shortDetail || "Programado";
 
-    function filtrarDeporte(key, btn) {
-      document.querySelectorAll('.sport-chip').forEach(function(b) { b.classList.remove('active'); });
-      btn.classList.add('active');
-      deporteFiltroActual = key;
-      renderizar();
-    }
+      const card = document.createElement("article");
+      card.className = "match";
+      const title = document.createElement("p");
+      title.className = "status";
+      title.textContent = `${sport.label} · ${state}`;
+      const score = document.createElement("div");
+      score.className = "score";
 
-    // Pintado instantáneo garantizado al 100%
-    renderizar();
-  </script>
+      const team = t =>
+        `${t?.team?.displayName || "Por confirmar"} ${
+          t?.score ?? "-"
+        }`;
+
+      const teams = document.createElement("div");
+      teams.textContent = `${team(home)}  —  ${team(away)}`;
+      const time = document.createElement("p");
+      time.className = "muted";
+      time.textContent = date;
+
+      card.append(title, teams, time);
+      container.appendChild(card);
+    });
+  } catch (error) {
+    status.textContent =
+      "No se pudieron cargar los resultados. Comprueba la conexión e inténtalo de nuevo.";
+  }
+}
+
+document.getElementById("refresh").addEventListener("click", loadMatches);
+document.getElementById("sport").addEventListener("change", loadMatches);
+loadMatches();
+setInterval(loadMatches, 60000);
+</script>
 </body>
 </html>
