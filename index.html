@@ -186,18 +186,6 @@
       color: var(--text-white);
     }
 
-    .league-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .league-icon {
-      width: 18px;
-      height: 18px;
-      object-fit: contain;
-    }
-
     /* Tarjeta de Partido */
     .match-item {
       padding: 12px 14px;
@@ -234,7 +222,7 @@
     }
 
     .match-status-box {
-      min-width: 65px;
+      min-width: 75px;
       text-align: right;
       display: flex;
       flex-direction: column;
@@ -256,6 +244,131 @@
 
     .status-text.live {
       color: var(--accent-green);
+    }
+
+    .fav-btn {
+      font-size: 1.1rem;
+      margin-left: 10px;
+      color: var(--text-sub);
+      transition: transform 0.2s;
+    }
+
+    .fav-btn.active {
+      color: var(--accent-orange);
+    }
+
+    /* Modal de Detalles del Partido */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 2000;
+      display: none;
+      justify-content: center;
+      align-items: flex-end;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-content {
+      width: 100%;
+      max-width: 680px;
+      background: var(--bg-card);
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+      border: 1px solid var(--border-color);
+      padding: 20px 18px 30px;
+      animation: slideUp 0.25s ease-out;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+    }
+
+    .close-modal {
+      background: var(--bg-main);
+      border: none;
+      color: var(--text-white);
+      font-size: 1.2rem;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .modal-scorecard {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      text-align: center;
+      margin-bottom: 24px;
+      background: var(--bg-main);
+      padding: 16px;
+      border-radius: 14px;
+      border: 1px solid var(--border-color);
+    }
+
+    .modal-team {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      width: 35%;
+    }
+
+    .modal-team img {
+      width: 45px;
+      height: 45px;
+      object-fit: contain;
+    }
+
+    .modal-team span {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .modal-score {
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: var(--accent-orange);
+    }
+
+    .modal-details-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .detail-box {
+      background: var(--bg-main);
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      font-size: 0.8rem;
+    }
+
+    .detail-box-title {
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      margin-bottom: 4px;
+      font-weight: 600;
     }
 
     /* Bottom Navigation Bar */
@@ -320,7 +433,7 @@
     <button class="date-btn" onclick="cambiarFecha('manana', this)">Mañana</button>
   </div>
 
-  <!-- Pestañas de Deportes acotados -->
+  <!-- Pestañas de Deportes -->
   <div class="sports-nav">
     <div class="sport-chip active" onclick="filtrarDeporte('all', this)">⚡ Todos</div>
     <div class="sport-chip" onclick="filtrarDeporte('baseball', this)">⚾ MLB</div>
@@ -331,41 +444,71 @@
   </div>
 
   <main id="app">
-    <div class="loader">Cargando la mejor información deportiva...</div>
+    <div class="loader">Sincronizando información de nivel profesional...</div>
   </main>
 
-  <!-- Barra de Navegación Inferior Tipo App Nativa -->
+  <!-- Modal Flotante de Detalles del Partido -->
+  <div class="modal-overlay" id="matchModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span id="modalLeagueTitle" style="font-size:0.85rem; font-weight:700; color:var(--accent-orange);">LIGA</span>
+        <button class="close-modal" onclick="cerrarModal()">✕</button>
+      </div>
+
+      <div class="modal-scorecard">
+        <div class="modal-team">
+          <img id="modalVisitLogo" src="" alt="">
+          <span id="modalVisitName">Visitante</span>
+        </div>
+        <div>
+          <div class="modal-score" id="modalScoreText">0 - 0</div>
+          <div style="font-size:0.75rem; color:var(--accent-green); font-weight:700; margin-top:4px;" id="modalStatusText">EN VIVO</div>
+        </div>
+        <div class="modal-team">
+          <img id="modalHomeLogo" src="" alt="">
+          <span id="modalHomeName">Local</span>
+        </div>
+      </div>
+
+      <div class="modal-details-grid">
+        <div class="detail-box">
+          <div class="detail-box-title">ESTADO / TIEMPO</div>
+          <div id="modalDetailStatus" style="font-weight:700;">-</div>
+        </div>
+        <div class="detail-box">
+          <div class="detail-box-title">COMPETENCIA</div>
+          <div id="modalDetailLeague" style="font-weight:700;">-</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra de Navegación Inferior -->
   <nav class="bottom-nav">
-    <div class="nav-item active">
+    <div class="nav-item active" onclick="cambiarSeccion('partidos', this)">
       <span class="nav-icon">⚽</span>
       <span>Partidos</span>
     </div>
-    <div class="nav-item">
-      <span class="nav-icon">🏆</span>
-      <span>Ligas</span>
-    </div>
-    <div class="nav-item">
+    <div class="nav-item" onclick="cambiarSeccion('favoritos', this)">
       <span class="nav-icon">⭐</span>
       <span>Favoritos</span>
-    </div>
-    <div class="nav-item">
-      <span class="nav-icon">🔍</span>
-      <span>Buscar</span>
     </div>
   </nav>
 
   <script>
     let todosLosEventos = [];
+    let favoritosIDs = JSON.parse(localStorage.getItem('sportscat_favs') || '[]');
+    let vistaActual = 'partidos';
 
-    // Cargar eventos directo desde feed multideporte rápido (ESPN API Endpoints)
     async function cargarPartidos() {
       const app = document.getElementById('app');
-      app.innerHTML = '<div class="loader">Sincronizando marcadores en tiempo real...</div>';
+      app.innerHTML = '<div class="loader">Sincronizando la mejor cobertura en tiempo real...</div>';
 
       const endpoints = [
-        { sport: 'baseball', league: 'mlb', name: 'MLB' },
+        { sport: 'baseball', league: 'mlb', name: 'Major League Baseball' },
         { sport: 'basketball', league: 'nba', name: 'NBA' },
-        { sport: 'soccer', league: 'usa.1', name: 'Fútbol' },
+        { sport: 'soccer', league: 'usa.1', name: 'MLS / Fútbol Latam' },
+        { sport: 'soccer', league: 'uefa.champions', name: 'UEFA Champions League' },
         { sport: 'football', league: 'nfl', name: 'NFL' }
       ];
 
@@ -400,10 +543,14 @@
           }
         });
 
-        renderizarLigas(todosLosEventos);
+        if (vistaActual === 'favoritos') {
+          mostrarFavoritos();
+        } else {
+          renderizarLigas(todosLosEventos);
+        }
 
       } catch (err) {
-        app.innerHTML = '<div class="loader">Error cargando partidos. Reintentando...</div>';
+        app.innerHTML = '<div class="loader">Reintentando conexión...</div>';
       }
     }
 
@@ -412,11 +559,10 @@
       app.innerHTML = '';
 
       if (eventos.length === 0) {
-        app.innerHTML = '<div class="loader">No hay eventos en vivo o programados para este filtro hoy.</div>';
+        app.innerHTML = '<div class="loader">No hay eventos para esta categoría.</div>';
         return;
       }
 
-      // Agrupar por liga
       const grupos = {};
       eventos.forEach(evt => {
         if (!grupos[evt.ligaNombre]) grupos[evt.ligaNombre] = [];
@@ -427,36 +573,92 @@
         const groupEl = document.createElement('div');
         groupEl.className = 'league-group';
 
-        let matchesHtml = grupos[liga].map(m => `
-          <div class="match-item">
-            <div class="match-teams">
-              <div class="team-row">
-                <img class="team-logo" src="${m.logoVisitante || 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo.png'}" alt="">
-                <span>${m.equipoVisitante}</span>
+        let matchesHtml = grupos[liga].map(m => {
+          const esFav = favoritosIDs.includes(m.id);
+          return `
+            <div class="match-item" onclick="abrirDetalleModal('${m.id}')">
+              <div class="match-teams">
+                <div class="team-row">
+                  <img class="team-logo" src="${m.logoVisitante || 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo.png'}" alt="">
+                  <span>${m.equipoVisitante}</span>
+                </div>
+                <div class="team-row">
+                  <img class="team-logo" src="${m.logoLocal || 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo.png'}" alt="">
+                  <span>${m.equipoLocal}</span>
+                </div>
               </div>
-              <div class="team-row">
-                <img class="team-logo" src="${m.logoLocal || 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/default-team-logo.png'}" alt="">
-                <span>${m.equipoLocal}</span>
+              <div class="match-status-box">
+                <div class="score-text">${m.puntosVisitante ?? '-'} - ${m.puntosLocal ?? '-'}</div>
+                <div class="status-text ${m.esEnVivo ? 'live' : ''}">${m.esEnVivo ? '🔴 ' + m.estado : m.estado}</div>
               </div>
+              <span class="fav-btn ${esFav ? 'active' : ''}" onclick="toggleFav(event, '${m.id}')">⭐</span>
             </div>
-            <div class="match-status-box">
-              <div class="score-text">${m.puntosVisitante ?? '-'} - ${m.puntosLocal ?? '-'}</div>
-              <div class="status-text ${m.esEnVivo ? 'live' : ''}">${m.esEnVivo ? '🔴 ' + m.estado : m.estado}</div>
-            </div>
-          </div>
-        `).join('');
+          `;
+        }).join('');
 
         groupEl.innerHTML = `
           <div class="league-header">
-            <div class="league-title">
-              <span>🏆 ${liga}</span>
-            </div>
+            <span>🏆 ${liga}</span>
           </div>
           ${matchesHtml}
         `;
 
         app.appendChild(groupEl);
       }
+    }
+
+    function abrirDetalleModal(id) {
+      const partido = todosLosEventos.find(e => e.id === id);
+      if (!partido) return;
+
+      document.getElementById('modalLeagueTitle').innerText = partido.ligaNombre.toUpperCase();
+      document.getElementById('modalVisitName').innerText = partido.equipoVisitante;
+      document.getElementById('modalVisitLogo').src = partido.logoVisitante;
+      document.getElementById('modalHomeName').innerText = partido.equipoLocal;
+      document.getElementById('modalHomeLogo').src = partido.logoLocal;
+      document.getElementById('modalScoreText').innerText = `${partido.puntosVisitante ?? '0'} - ${partido.puntosLocal ?? '0'}`;
+      document.getElementById('modalStatusText').innerText = partido.estado;
+      document.getElementById('modalDetailStatus').innerText = partido.estado;
+      document.getElementById('modalDetailLeague').innerText = partido.ligaNombre;
+
+      document.getElementById('matchModal').classList.add('open');
+    }
+
+    function cerrarModal() {
+      document.getElementById('matchModal').classList.remove('open');
+    }
+
+    function toggleFav(e, id) {
+      e.stopPropagation();
+      if (favoritosIDs.includes(id)) {
+        favoritosIDs = favoritosIDs.filter(favId => favId !== id);
+      } else {
+        favoritosIDs.push(id);
+      }
+      localStorage.setItem('sportscat_favs', JSON.stringify(favoritosIDs));
+      
+      if (vistaActual === 'favoritos') {
+        mostrarFavoritos();
+      } else {
+        renderizarLigas(todosLosEventos);
+      }
+    }
+
+    function cambiarSeccion(seccion, btn) {
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      btn.classList.add('active');
+      vistaActual = seccion;
+
+      if (seccion === 'favoritos') {
+        mostrarFavoritos();
+      } else {
+        renderizarLigas(todosLosEventos);
+      }
+    }
+
+    function mostrarFavoritos() {
+      const favEventos = todosLosEventos.filter(e => favoritosIDs.includes(e.id));
+      renderizarLigas(favEventos);
     }
 
     function filtrarDeporte(sportKey, btn) {
