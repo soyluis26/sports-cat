@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Sports Cat - Resultados en Vivo y Análisis</title>
+  <title>Sports Cat - Resultados y Análisis</title>
   <link rel="manifest" href="manifest.json">
   <style>
     :root {
@@ -98,7 +98,7 @@
       100% { transform: scale(0.9); opacity: 0.7; }
     }
 
-    /* Selector de Fechas Dinámico */
+    /* Selector de Fechas */
     .date-bar {
       width: 100%;
       max-width: 680px;
@@ -441,7 +441,7 @@
     </div>
   </header>
 
-  <!-- Selector de Fechas Real -->
+  <!-- Selector de Fechas Dinámico -->
   <div class="date-bar">
     <button class="date-btn" onclick="cambiarFecha('ayer', this)">Ayer</button>
     <button class="date-btn active" onclick="cambiarFecha('hoy', this)" id="btnHoy">HOY</button>
@@ -458,7 +458,7 @@
   </div>
 
   <main id="app">
-    <div class="loader">Cargando la agenda deportiva real del día...</div>
+    <div class="loader">Cargando marcadores en tiempo real...</div>
   </main>
 
   <!-- Modal Flotante con Análisis Diferencial -->
@@ -507,19 +507,23 @@
     let todosLosEventos = [];
     let favoritosIDs = JSON.parse(localStorage.getItem('sportscat_favs') || '[]');
     let vistaActual = 'partidos';
-    let offsetDiasActual = 0; // 0 = Hoy, -1 = Ayer, 1 = Mañana
+    let offsetDiasActual = 0;
 
-    function obtenerFechaURL(offset) {
+    function formatearFechaURL(offset) {
+      if (offset === 0) return ''; // Para 'HOY' usa endpoint directo
       const d = new Date();
       d.setDate(d.getDate() + offset);
-      return d.toISOString().split('T')[0].replace(/-/g, '');
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `?dates=${yyyy}${mm}${dd}`;
     }
 
     async function cargarPartidos() {
       const app = document.getElementById('app');
-      app.innerHTML = '<div class="loader">Sincronizando partidos oficiales de la fecha...</div>';
+      app.innerHTML = '<div class="loader">Sincronizando información deportiva...</div>';
 
-      const fechaStr = obtenerFechaURL(offsetDiasActual);
+      const paramFecha = formatearFechaURL(offsetDiasActual);
       const endpoints = [
         { sport: 'baseball', league: 'mlb', name: 'Major League Baseball' },
         { sport: 'basketball', league: 'nba', name: 'NBA' },
@@ -530,7 +534,7 @@
 
       try {
         let promesas = endpoints.map(ep => 
-          fetch(`https://site.api.espn.com/apis/site/v2/sports/${ep.sport}/${ep.league}/scoreboard?dates=${fechaStr}`)
+          fetch(`https://site.api.espn.com/apis/site/v2/sports/${ep.sport}/${ep.league}/scoreboard${paramFecha}`)
             .then(res => res.json())
             .catch(() => null)
         );
@@ -542,11 +546,10 @@
           if (data && data.events) {
             data.events.forEach(evt => {
               const comp = evt.competitions[0];
-              const home = comp.competitors.find(c => c.homeAway === 'home');
-              const away = comp.competitors.find(c => c.homeAway === 'away');
+              const home = comp.competitors.find(c => c.homeAway === 'home') || comp.competitors[0];
+              const away = comp.competitors.find(c => c.homeAway === 'away') || comp.competitors[1];
 
-              // Generar un dato analítico único para diferenciar a Sports Cat
-              const insightTexto = generarInsightDiferencial(endpoints[index].league, away.team.name, home.team.name, evt.status.type.state);
+              const insightTexto = generarInsightDiferencial(endpoints[index].league, away.team.name, home.team.name);
 
               todosLosEventos.push({
                 id: evt.id,
@@ -573,27 +576,17 @@
         }
 
       } catch (err) {
-        app.innerHTML = '<div class="loader">No se encontraron partidos programados para esta fecha exacta.</div>';
+        app.innerHTML = '<div class="loader">Error cargando información. Reintentando...</div>';
       }
     }
 
-    function generarInsightDiferencial(liga, visitante, local, estado) {
-      const insightsMLB = [
-        `Duelo clave en la serie. El bullpen de ${local} suele permitir 4.2 carreras en los últimos tercios.`,
-        `Choque táctico en el montículo. ${visitante} mantiene un promedio de bateo alto contra lanzadores derechos.`
+    function generarInsightDiferencial(liga, visitante, local) {
+      const insights = [
+        `Duelo de alta tensión. ${local} promedia alto rendimiento ofensivo en los minutos finales.`,
+        `Choque táctico. ${visitante} busca romper su racha como visitante.`,
+        `Partido clave para el posicionamiento en la tabla de la temporada.`
       ];
-      const insightsNBA = [
-        `Alta intensidad ofensiva esperada. Ambos equipos superan los 110 puntos por juego en sus últimos 5 duelos.`,
-        `Batalla defensiva en la pintura. Los rebotes ofensivos definirán el ritmo del encuentro.`
-      ];
-      const insightsGeneral = [
-        `Alta presión táctica. El equipo local busca romper racha negativa frente a su afición.`,
-        `Duelo directo por posiciones clave en la tabla general de la temporada.`
-      ];
-
-      if (liga === 'mlb') return insightsMLB[Math.floor(Math.random() * insightsMLB.length)];
-      if (liga === 'nba') return insightsNBA[Math.floor(Math.random() * insightsNBA.length)];
-      return insightsGeneral[Math.floor(Math.random() * insightsGeneral.length)];
+      return insights[Math.floor(Math.random() * insights.length)];
     }
 
     function renderizarLigas(eventos) {
@@ -601,7 +594,7 @@
       app.innerHTML = '';
 
       if (eventos.length === 0) {
-        app.innerHTML = '<div class="loader">No hay partidos registrados para este día o deporte. Prueba cambiando de fecha arriba.</div>';
+        app.innerHTML = '<div class="loader">No hay partidos registrados para esta fecha o categoría.</div>';
         return;
       }
 
@@ -685,4 +678,23 @@
       document.getElementById('matchModal').classList.remove('open');
     }
 
-    f
+    function toggleFav(e, id) {
+      e.stopPropagation();
+      if (favoritosIDs.includes(id)) {
+        favoritosIDs = favoritosIDs.filter(favId => favId !== id);
+      } else {
+        favoritosIDs.push(id);
+      }
+      localStorage.setItem('sportscat_favs', JSON.stringify(favoritosIDs));
+      
+      if (vistaActual === 'favoritos') {
+        mostrarFavoritos();
+      } else {
+        renderizarLigas(todosLosEventos);
+      }
+    }
+
+    function cambiarSeccion(seccion, btn) {
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      btn.classList.add('active');
+      vistaActual = se
