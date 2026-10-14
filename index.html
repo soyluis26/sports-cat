@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Sports Cat - Resultados y Análisis</title>
+  <title>Sports Cat - Resultados en Vivo</title>
   <link rel="manifest" href="manifest.json">
   <style>
     :root {
@@ -98,7 +98,7 @@
       100% { transform: scale(0.9); opacity: 0.7; }
     }
 
-    /* Selector de Fechas */
+    /* Selector de Fechas Dinámico */
     .date-bar {
       width: 100%;
       max-width: 680px;
@@ -252,7 +252,6 @@
       color: var(--accent-green);
     }
 
-    /* Elemento Diferencial: Insight de Cat Stats */
     .cat-insight {
       background: rgba(255, 159, 10, 0.08);
       border-left: 3px solid var(--accent-orange);
@@ -443,9 +442,9 @@
 
   <!-- Selector de Fechas Dinámico -->
   <div class="date-bar">
-    <button class="date-btn" onclick="cambiarFecha('ayer', this)">Ayer</button>
-    <button class="date-btn active" onclick="cambiarFecha('hoy', this)" id="btnHoy">HOY</button>
-    <button class="date-btn" onclick="cambiarFecha('manana', this)">Mañana</button>
+    <button class="date-btn" onclick="cambiarFecha(-1, this)">Ayer</button>
+    <button class="date-btn active" onclick="cambiarFecha(0, this)" id="btnHoy">HOY</button>
+    <button class="date-btn" onclick="cambiarFecha(1, this)">Mañana</button>
   </div>
 
   <!-- Pestañas de Deportes -->
@@ -461,7 +460,7 @@
     <div class="loader">Cargando marcadores en tiempo real...</div>
   </main>
 
-  <!-- Modal Flotante con Análisis Diferencial -->
+  <!-- Modal Flotante de Detalles -->
   <div class="modal-overlay" id="matchModal">
     <div class="modal-content">
       <div class="modal-header">
@@ -486,7 +485,7 @@
 
       <div class="modal-analysis-box">
         <div class="modal-analysis-title">📊 Cat Stats Intelligence (Análisis Exclusivo)</div>
-        <div id="modalAnalysisText">Cargando perspectiva táctica y contexto del encuentro...</div>
+        <div id="modalAnalysisText">Análisis táctico del partido...</div>
       </div>
     </div>
   </div>
@@ -509,35 +508,40 @@
     let vistaActual = 'partidos';
     let offsetDiasActual = 0;
 
-    function formatearFechaURL(offset) {
-      if (offset === 0) return ''; // Para 'HOY' usa endpoint directo
+    function obtenerFechaTexto(offset) {
       const d = new Date();
       d.setDate(d.getDate() + offset);
       const yyyy = d.getFullYear();
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const dd = String(d.getDate()).padStart(2, '0');
-      return `?dates=${yyyy}${mm}${dd}`;
+      return `${yyyy}${mm}${dd}`;
     }
 
     async function cargarPartidos() {
       const app = document.getElementById('app');
-      app.innerHTML = '<div class="loader">Sincronizando información deportiva...</div>';
+      app.innerHTML = '<div class="loader">Sincronizando información deportiva en vivo...</div>';
 
-      const paramFecha = formatearFechaURL(offsetDiasActual);
+      const fechaYYYYMMDD = obtenerFechaTexto(offsetDiasActual);
+      
       const endpoints = [
         { sport: 'baseball', league: 'mlb', name: 'Major League Baseball' },
         { sport: 'basketball', league: 'nba', name: 'NBA' },
-        { sport: 'soccer', league: 'usa.1', name: 'MLS / Fútbol' },
+        { sport: 'soccer', league: 'usa.1', name: 'MLS / Fútbol Latam' },
         { sport: 'soccer', league: 'uefa.champions', name: 'UEFA Champions League' },
         { sport: 'football', league: 'nfl', name: 'NFL' }
       ];
 
       try {
-        let promesas = endpoints.map(ep => 
-          fetch(`https://site.api.espn.com/apis/site/v2/sports/${ep.sport}/${ep.league}/scoreboard${paramFecha}`)
+        let promesas = endpoints.map(ep => {
+          let url = `https://site.api.espn.com/apis/site/v2/sports/${ep.sport}/${ep.league}/scoreboard?dates=${fechaYYYYMMDD}`;
+          return fetch(url)
             .then(res => res.json())
-            .catch(() => null)
-        );
+            .catch(() => 
+              // Proxy de respaldo en caso de bloqueo CORS en celular
+              fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`).then(r => r.json())
+            )
+            .catch(() => null);
+        });
 
         let resultados = await Promise.all(promesas);
         todosLosEventos = [];
@@ -548,8 +552,6 @@
               const comp = evt.competitions[0];
               const home = comp.competitors.find(c => c.homeAway === 'home') || comp.competitors[0];
               const away = comp.competitors.find(c => c.homeAway === 'away') || comp.competitors[1];
-
-              const insightTexto = generarInsightDiferencial(endpoints[index].league, away.team.name, home.team.name);
 
               todosLosEventos.push({
                 id: evt.id,
@@ -563,11 +565,16 @@
                 puntosVisitante: away.score,
                 estado: evt.status.type.shortDetail,
                 esEnVivo: evt.status.type.state === 'in',
-                insight: insightTexto
+                insight: `Análisis previo: ${away.team.name} vs ${home.team.name}. Clave en el rendimiento defensivo del equipo local.`
               });
             });
           }
         });
+
+        if (todosLosEventos.length === 0) {
+          app.innerHTML = '<div class="loader">No hay eventos agendados para esta fecha. Prueba seleccionando "HOY" o cambiando de deporte.</div>';
+          return;
+        }
 
         if (vistaActual === 'favoritos') {
           mostrarFavoritos();
@@ -576,17 +583,8 @@
         }
 
       } catch (err) {
-        app.innerHTML = '<div class="loader">Error cargando información. Reintentando...</div>';
+        app.innerHTML = '<div class="loader">Sincronizando la conexión... Por favor recarga en unos momentos.</div>';
       }
-    }
-
-    function generarInsightDiferencial(liga, visitante, local) {
-      const insights = [
-        `Duelo de alta tensión. ${local} promedia alto rendimiento ofensivo en los minutos finales.`,
-        `Choque táctico. ${visitante} busca romper su racha como visitante.`,
-        `Partido clave para el posicionamiento en la tabla de la temporada.`
-      ];
-      return insights[Math.floor(Math.random() * insights.length)];
     }
 
     function renderizarLigas(eventos) {
@@ -594,7 +592,7 @@
       app.innerHTML = '';
 
       if (eventos.length === 0) {
-        app.innerHTML = '<div class="loader">No hay partidos registrados para esta fecha o categoría.</div>';
+        app.innerHTML = '<div class="loader">No hay partidos registrados bajo estos filtros.</div>';
         return;
       }
 
@@ -647,14 +645,10 @@
       }
     }
 
-    function cambiarFecha(tipo, btn) {
+    function cambiarFecha(offset, btn) {
       document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-
-      if (tipo === 'ayer') offsetDiasActual = -1;
-      if (tipo === 'hoy') offsetDiasActual = 0;
-      if (tipo === 'manana') offsetDiasActual = 1;
-
+      offsetDiasActual = offset;
       cargarPartidos();
     }
 
@@ -697,4 +691,14 @@
     function cambiarSeccion(seccion, btn) {
       document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
       btn.classList.add('active');
-      vistaActual = se
+      vistaActual = seccion;
+
+      if (seccion === 'favoritos') {
+        mostrarFavoritos();
+      } else {
+        renderizarLigas(todosLosEventos);
+      }
+    }
+
+    function mostrarFavoritos() {
+      const favEventos = todosLosEventos.filter(e 
