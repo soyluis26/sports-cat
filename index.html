@@ -435,7 +435,7 @@
 
   <div class="date-bar">
     <button class="date-btn" onclick="cambiarFecha('ayer', this)">Ayer</button>
-    <button class="date-btn active" onclick="cambiarFecha('hoy', this)" id="btnHoy">HOY</button>
+    <button class="date-btn active" onclick="cambiarFecha('hoy', this)">HOY</button>
     <button class="date-btn" onclick="cambiarFecha('manana', this)">Mañana</button>
   </div>
 
@@ -448,7 +448,7 @@
   </div>
 
   <main id="app">
-    <div class="loader">Cargando partidos de la jornada...</div>
+    <div class="loader">Sincronizando información de partidos...</div>
   </main>
 
   <div class="modal-overlay" id="matchModal">
@@ -499,15 +499,21 @@
 
     const partidosPorFecha = {
       'hoy': [
+        // MLB
         { id: 'm1', deporteKey: 'baseball', ligaNombre: 'Major League Baseball', equipoLocal: 'Guardians', logoLocal: 'https://a.espncdn.com/i/teamlogos/mlb/50/cle.png', puntosLocal: '3', equipoVisitante: 'Rays', logoVisitante: 'https://a.espncdn.com/i/teamlogos/mlb/50/tb.png', puntosVisitante: '1', estado: 'Top 7th', esEnVivo: true, insight: 'Rays domina la serie particular con efectividad en bullpen.' },
         { id: 'm2', deporteKey: 'baseball', ligaNombre: 'Major League Baseball', equipoLocal: 'Yankees', logoLocal: 'https://a.espncdn.com/i/teamlogos/mlb/50/nyy.png', puntosLocal: '5', equipoVisitante: 'Red Sox', logoVisitante: 'https://a.espncdn.com/i/teamlogos/mlb/50/bos.png', puntosVisitante: '4', estado: 'Final', esEnVivo: false, insight: 'Clásico de la división este decidido en entradas extras.' },
         { id: 'm3', deporteKey: 'baseball', ligaNombre: 'Major League Baseball', equipoLocal: 'Dodgers', logoLocal: 'https://a.espncdn.com/i/teamlogos/mlb/50/lad.png', puntosLocal: '0', equipoVisitante: 'Giants', logoVisitante: 'https://a.espncdn.com/i/teamlogos/mlb/50/sf.png', puntosVisitante: '0', estado: '8:10 PM', esEnVivo: false, insight: 'Duelo estelar en la costa oeste de la Liga Nacional.' },
+        
+        // NBA
         { id: 'n1', deporteKey: 'basketball', ligaNombre: 'NBA', equipoLocal: 'Cavaliers', logoLocal: 'https://a.espncdn.com/i/teamlogos/nba/50/cle.png', puntosLocal: '88', equipoVisitante: 'Magic', logoVisitante: 'https://a.espncdn.com/i/teamlogos/nba/50/orl.png', puntosVisitante: '85', estado: '4th Qtr', esEnVivo: true, insight: 'Cavaliers ajusta la defensa perimetral para asegurar la ventaja.' },
         { id: 'n2', deporteKey: 'basketball', ligaNombre: 'NBA', equipoLocal: 'Lakers', logoLocal: 'https://a.espncdn.com/i/teamlogos/nba/50/lal.png', puntosLocal: '112', equipoVisitante: 'Warriors', logoVisitante: 'https://a.espncdn.com/i/teamlogos/nba/50/gs.png', puntosVisitante: '115', estado: 'Final', esEnVivo: false, insight: 'Intenso duelo de triples definido en los últimos segundos.' },
         { id: 'n3', deporteKey: 'basketball', ligaNombre: 'NBA', equipoLocal: 'Celtics', logoLocal: 'https://a.espncdn.com/i/teamlogos/nba/50/bos.png', puntosLocal: '64', equipoVisitante: 'Knicks', logoVisitante: 'https://a.espncdn.com/i/teamlogos/nba/50/nyk.png', puntosVisitante: '60', estado: '3rd Qtr', esEnVivo: true, insight: 'Dominio absoluto de la pintura por parte del equipo local.' },
-        { id: 'n4', deporteKey: 'basketball', ligaNombre: 'NBA', equipoLocal: 'Nuggets', logoLocal: 'https://a.espncdn.com/i/teamlogos/nba/50/den.png', puntosLocal: '0', equipoVisitante: 'Suns', logoVisitante: 'https://a.espncdn.com/i/teamlogos/nba/50/phx.png', puntosVisitante: '0', estado: '10:30 PM', esEnVivo: false, insight: 'Choque estratégico entre aspirantes al título de conferencia.' },
+        
+        // Fútbol
         { id: 'f1', deporteKey: 'soccer', ligaNombre: 'MLS / Fútbol', equipoLocal: 'Inter Miami', logoLocal: 'https://a.espncdn.com/i/teamlogos/soccer/50/18258.png', puntosLocal: '2', equipoVisitante: 'LA Galaxy', logoVisitante: 'https://a.espncdn.com/i/teamlogos/soccer/50/187.png', puntosVisitante: '1', estado: '82\'', esEnVivo: true, insight: 'Presión alta de Inter Miami en el tramo final del partido.' },
         { id: 'f2', deporteKey: 'soccer', ligaNombre: 'UEFA Champions League', equipoLocal: 'Real Madrid', logoLocal: 'https://a.espncdn.com/i/teamlogos/soccer/50/86.png', puntosLocal: '3', equipoVisitante: 'Man City', logoVisitante: 'https://a.espncdn.com/i/teamlogos/soccer/50/382.png', puntosVisitante: '2', estado: 'Final', esEnVivo: false, insight: 'Exhibición táctica en la segunda mitad con goles decisivos.' },
+
+        // NFL
         { id: 'nf1', deporteKey: 'football', ligaNombre: 'NFL', equipoLocal: 'Chiefs', logoLocal: 'https://a.espncdn.com/i/teamlogos/nfl/50/kc.png', puntosLocal: '24', equipoVisitante: 'Ravens', logoVisitante: 'https://a.espncdn.com/i/teamlogos/nfl/50/bal.png', puntosVisitante: '17', estado: 'Final', esEnVivo: false, insight: 'Excepcional actuación ofensiva en los pases largos de anotación.' }
       ],
       'ayer': [
@@ -536,6 +542,7 @@
 
     function renderizarLigas(eventos) {
       const app = document.getElementById('app');
+      if (!app) return;
       app.innerHTML = '';
 
       if (eventos.length === 0) {
@@ -579,4 +586,18 @@
               </div>
             </div>
           `;
-      
+        }).join('');
+
+        groupEl.innerHTML = `
+          <div class="league-header">
+            <span>🏆 ${liga}</span>
+          </div>
+          ${matchesHtml}
+        `;
+
+        app.appendChild(groupEl);
+      }
+    }
+
+    function cambiarFecha(tipo, btn) {
+      document.querySelectorAll('.d
