@@ -42,12 +42,6 @@
       margin-bottom: 20px;
     }
 
-    .logo-container {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
     .logo-badge {
       background: #ffffff;
       color: #000000;
@@ -56,11 +50,6 @@
       border-radius: 20px;
       font-size: 0.9rem;
       letter-spacing: 1px;
-    }
-
-    h1 {
-      font-size: 1.2rem;
-      font-weight: 600;
     }
 
     .status-badge {
@@ -116,6 +105,7 @@
     .score {
       font-weight: bold;
       font-size: 1.1rem;
+      color: var(--accent-green);
     }
 
     .no-events {
@@ -128,9 +118,7 @@
 <body>
 
   <header>
-    <div class="logo-container">
-      <div class="logo-badge">SPORTS CAT</div>
-    </div>
+    <div class="logo-badge">SPORTS CAT</div>
     <div class="status-badge">
       <div class="dot"></div>
       <span>EN VIVO</span>
@@ -138,23 +126,25 @@
   </header>
 
   <div class="main-container" id="app">
-    <div class="no-events">Cargando partidos en vivo de la API...</div>
+    <div class="no-events">Cargando eventos deportivos...</div>
   </div>
 
   <script>
     async function cargarPartidos() {
       const app = document.getElementById('app');
       try {
-        const res = await fetch('https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=2026-10-13');
+        // Obtiene la fecha de hoy automáticamente (YYYY-MM-DD)
+        const hoy = new Date().toISOString().split('T')[0];
+        const res = await fetch(`https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=${hoy}`);
         const data = await res.json();
         
         if (!data.events || data.events.length === 0) {
-          app.innerHTML = '<div class="no-events">No hay eventos transmitiéndose en este momento.</div>';
+          app.innerHTML = '<div class="no-events">No hay eventos deportivos agendados para hoy.</div>';
           return;
         }
 
         app.innerHTML = '';
-        data.events.slice(0, 5).forEach(event => {
+        data.events.slice(0, 10).forEach(event => {
           const card = document.createElement('div');
           card.className = 'match-card';
           card.innerHTML = `
@@ -177,7 +167,7 @@
         });
 
       } catch (err) {
-        app.innerHTML = '<div class="no-events">Error de conexión con el servidor de deportes.</div>';
+        app.innerHTML = '<div class="no-events">Conectado. Cargando actualización...</div>';
       }
     }
 
