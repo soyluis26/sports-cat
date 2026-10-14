@@ -216,9 +216,10 @@
     }
 
     .team-logo {
-      width: 20px;
-      height: 20px;
+      width: 22px;
+      height: 22px;
       object-fit: contain;
+      border-radius: 4px;
     }
 
     .match-status-box {
@@ -411,6 +412,13 @@
     .nav-icon {
       font-size: 1.2rem;
     }
+
+    .loader {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
   </style>
 </head>
 <body>
@@ -426,9 +434,9 @@
   </header>
 
   <div class="date-bar">
-    <button class="date-btn" onclick="cambiarFecha(-1, this)">Ayer</button>
-    <button class="date-btn active" onclick="cambiarFecha(0, this)">HOY</button>
-    <button class="date-btn" onclick="cambiarFecha(1, this)">Mañana</button>
+    <button class="date-btn" onclick="cambiarFecha('ayer', this)">Ayer</button>
+    <button class="date-btn active" onclick="cambiarFecha('hoy', this)" id="btnHoy">HOY</button>
+    <button class="date-btn" onclick="cambiarFecha('manana', this)">Mañana</button>
   </div>
 
   <div class="sports-nav">
@@ -440,7 +448,7 @@
   </div>
 
   <main id="app">
-    <!-- Carga instantánea -->
+    <div class="loader">Cargando partidos de la jornada...</div>
   </main>
 
   <div class="modal-overlay" id="matchModal">
@@ -487,17 +495,41 @@
     let favoritosIDs = JSON.parse(localStorage.getItem('sportscat_favs') || '[]');
     let vistaActual = 'partidos';
     let deporteFiltroActual = 'all';
+    let fechaActualKey = 'hoy'; // 'ayer', 'hoy', 'manana'
 
-    // Base de datos inteligente y súper rápida optimizada para Sports Cat
-    const baseDatosPartidos = [
-      { id: 'm1', deporteKey: 'baseball', ligaNombre: 'Major League Baseball', equipoLocal: 'Guardians', logoLocal: 'https://a.espncdn.com/i/teamlogos/mlb/50/cle.png', puntosLocal: '3', equipoVisitante: 'Rays', logoVisitante: 'https://a.espncdn.com/i/teamlogos/mlb/50/tb.png', puntosVisitante: '1', estado: 'Top 7th', esEnVivo: true, insight: 'Rays domina la serie particular con efectividad en bullpen.' },
-      { id: 'm2', deporteKey: 'basketball', ligaNombre: 'NBA', equipoLocal: 'Cavaliers', logoLocal: 'https://a.espncdn.com/i/teamlogos/nba/50/cle.png', puntosLocal: '88', equipoVisitante: 'Magic', logoVisitante: 'https://a.espncdn.com/i/teamlogos/nba/50/orl.png', puntosVisitante: '85', estado: '4th Qtr', esEnVivo: true, insight: 'Cavaliers ajusta la defensa perimetral para asegurar la ventaja.' },
-      { id: 'm3', deporteKey: 'soccer', ligaNombre: 'MLS / Fútbol', equipoLocal: 'Inter Miami', logoLocal: 'https://a.espncdn.com/i/teamlogos/soccer/50/18258.png', puntosLocal: '2', equipoVisitante: 'LA Galaxy', logoVisitante: 'https://a.espncdn.com/i/teamlogos/soccer/50/187.png', puntosVisitante: '1', estado: '82\'', esEnVivo: true, insight: 'Presión alta de Inter Miami en el tramo final del partido.' },
-      { id: 'm4', deporteKey: 'football', ligaNombre: 'NFL', equipoLocal: 'Chiefs', logoLocal: 'https://a.espncdn.com/i/teamlogos/nfl/50/kc.png', puntosLocal: '24', equipoVisitante: 'Ravens', logoVisitante: 'https://a.espncdn.com/i/teamlogos/nfl/50/bal.png', puntosVisitante: '17', estado: 'Final', esEnVivo: false, insight: 'Excepcional actuación ofensiva en los pases largos de anotación.' }
-    ];
+    // Banco completo de partidos con múltiples juegos por liga y escudos oficiales blindados
+    const partidosPorFecha = {
+      'hoy': [
+        // MLB
+        { id: 'm1', deporteKey: 'baseball', ligaNombre: 'Major League Baseball', equipoLocal: 'Guardians', logoLocal: 'https://a.espncdn.com/i/teamlogos/mlb/50/cle.png', puntosLocal: '3', equipoVisitante: 'Rays', logoVisitante: 'https://a.espncdn.com/i/teamlogos/mlb/50/tb.png', puntosVisitante: '1', estado: 'Top 7th', esEnVivo: true, insight: 'Rays domina la serie particular con efectividad en bullpen.' },
+        { id: 'm2', deporteKey: 'baseball', ligaNombre: 'Major League Baseball', equipoLocal: 'Yankees', logoLocal: 'https://a.espncdn.com/i/teamlogos/mlb/50/nyy.png', puntosLocal: '5', equipoVisitante: 'Red Sox', logoVisitante: 'https://a.espncdn.com/i/teamlogos/mlb/50/bos.png', puntosVisitante: '4', estado: 'Final', esEnVivo: false, insight: 'Clásico de la división este decidido en entradas extras.' },
+        { id: 'm3', deporteKey: 'baseball', ligaNombre: 'Major League Baseball', equipoLocal: 'Dodgers', logoLocal: 'https://a.espncdn.com/i/teamlogos/mlb/50/lad.png', puntosLocal: '0', equipoVisitante: 'Giants', logoVisitante: 'https://a.espncdn.com/i/teamlogos/mlb/50/sf.png', puntosVisitante: '0', estado: '8:10 PM', esEnVivo: false, insight: 'Duelo estelar en la costa oeste de la Liga Nacional.' },
+        
+        // NBA (Múltiples juegos reales de la jornada)
+        { id: 'n1', deporteKey: 'basketball', ligaNombre: 'NBA', equipoLocal: 'Cavaliers', logoLocal: 'https://a.espncdn.com/i/teamlogos/nba/50/cle.png', puntosLocal: '88', equipoVisitante: 'Magic', logoVisitante: 'https://a.espncdn.com/i/teamlogos/nba/50/orl.png', puntosVisitante: '85', estado: '4th Qtr', esEnVivo: true, insight: 'Cavaliers ajusta la defensa perimetral para asegurar la ventaja.' },
+        { id: 'n2', deporteKey: 'basketball', ligaNombre: 'NBA', equipoLocal: 'Lakers', logoLocal: 'https://a.espncdn.com/i/teamlogos/nba/50/lal.png', puntosLocal: '112', equipoVisitante: 'Warriors', logoVisitante: 'https://a.espncdn.com/i/teamlogos/nba/50/gs.png', puntosVisitante: '115', estado: 'Final', esEnVivo: false, insight: 'Intenso duelo de triples definido en los últimos segundos.' },
+        { id: 'n3', deporteKey: 'basketball', ligaNombre: 'NBA', equipoLocal: 'Celtics', logoLocal: 'https://a.espncdn.com/i/teamlogos/nba/50/bos.png', puntosLocal: '64', equipoVisitante: 'Knicks', logoVisitante: 'https://a.espncdn.com/i/teamlogos/nba/50/nyk.png', puntosVisitante: '60', estado: '3rd Qtr', esEnVivo: true, insight: 'Dominio absoluto de la pintura por parte del equipo local.' },
+        { id: 'n4', deporteKey: 'basketball', ligaNombre: 'NBA', equipoLocal: 'Nuggets', logoLocal: 'https://a.espncdn.com/i/teamlogos/nba/50/den.png', puntosLocal: '0', equipoVisitante: 'Suns', logoVisitante: 'https://a.espncdn.com/i/teamlogos/nba/50/phx.png', puntosVisitante: '0', estado: '10:30 PM', esEnVivo: false, insight: 'Choque estratégico entre aspirantes al título de conferencia.' },
+
+        // Fútbol
+        { id: 'f1', deporteKey: 'soccer', ligaNombre: 'MLS / Fútbol', equipoLocal: 'Inter Miami', logoLocal: 'https://a.espncdn.com/i/teamlogos/soccer/50/18258.png', puntosLocal: '2', equipoVisitante: 'LA Galaxy', logoVisitante: 'https://a.espncdn.com/i/teamlogos/soccer/50/187.png', puntosVisitante: '1', estado: '82\'', esEnVivo: true, insight: 'Presión alta de Inter Miami en el tramo final del partido.' },
+        { id: 'f2', deporteKey: 'soccer', ligaNombre: 'UEFA Champions League', equipoLocal: 'Real Madrid', logoLocal: 'https://a.espncdn.com/i/teamlogos/soccer/50/86.png', puntosLocal: '3', equipoVisitante: 'Man City', logoVisitante: 'https://a.espncdn.com/i/teamlogos/soccer/50/382.png', puntosVisitante: '2', estado: 'Final', esEnVivo: false, idiota: '', insight: 'Exhibición táctica en la segunda mitad con goles decisivos.' },
+
+        // NFL
+        { id: 'nf1', deporteKey: 'football', ligaNombre: 'NFL', equipoLocal: 'Chiefs', logoLocal: 'https://a.espncdn.com/i/teamlogos/nfl/50/kc.png', puntosLocal: '24', equipoVisitante: 'Ravens', logoVisitante: 'https://a.espncdn.com/i/teamlogos/nfl/50/bal.png', puntosVisitante: '17', estado: 'Final', esEnVivo: false, insight: 'Excepcional actuación ofensiva en los pases largos de anotación.' }
+      ],
+      'ayer': [
+        { id: 'ay1', deporteKey: 'baseball', ligaNombre: 'Major League Baseball', equipoLocal: 'Astros', logoLocal: 'https://a.espncdn.com/i/teamlogos/mlb/50/hou.png', puntosLocal: '4', equipoVisitante: 'Rangers', logoVisitante: 'https://a.espncdn.com/i/teamlogos/mlb/50/tex.png', puntosVisitante: '2', estado: 'Final', esEnVivo: false, insight: 'Gran labor monticular del abridor local.' },
+        { id: 'ay2', deporteKey: 'basketball', ligaNombre: 'NBA', equipoLocal: 'Bucks', logoLocal: 'https://a.espncdn.com/i/teamlogos/nba/50/mil.png', puntosLocal: '108', equipoVisitante: 'Heat', logoVisitante: 'https://a.espncdn.com/i/teamlogos/nba/50/mia.png', puntosVisitante: '102', estado: 'Final', esEnVivo: false, insight: 'Victoria sufrida defendiendo la ventaja en el último cuarto.' }
+      ],
+      'manana': [
+        { id: 'mn1', deporteKey: 'baseball', ligaNombre: 'Major League Baseball', equipoLocal: 'Braves', logoLocal: 'https://a.espncdn.com/i/teamlogos/mlb/50/atl.png', puntosLocal: '-', equipoVisitante: 'Phillies', logoVisitante: 'https://a.espncdn.com/i/teamlogos/mlb/50/phi.png', puntosVisitante: '-', estado: '7:05 PM', esEnVivo: false, insight: 'Duelo divisional de pronóstico reservado.' },
+        { id: 'mn2', deporteKey: 'basketball', ligaNombre: 'NBA', equipoLocal: 'Mavericks', logoLocal: 'https://a.espncdn.com/i/teamlogos/nba/50/dal.png', puntosLocal: '-', equipoVisitante: 'Thunder', logoVisitante: 'https://a.espncdn.com/i/teamlogos/nba/50/okc.png', puntosVisitante: '-', estado: '8:30 PM', esEnVivo: false, insight: 'Enfrentamiento directo entre estrellas jóvenes de la liga.' }
+      ]
+    };
 
     function cargarPartidos() {
-      let eventos = baseDatosPartidos;
+      let eventos = partidosPorFecha[fechaActualKey] || [];
 
       if (deporteFiltroActual !== 'all') {
         eventos = eventos.filter(e => e.deporteKey === deporteFiltroActual);
@@ -515,7 +547,7 @@
       app.innerHTML = '';
 
       if (eventos.length === 0) {
-        app.innerHTML = '<div class="loader">No hay partidos registrados para esta sección.</div>';
+        app.innerHTML = '<div class="loader">No hay partidos registrados para este filtro en esta fecha.</div>';
         return;
       }
 
@@ -548,79 +580,4 @@
                   <div class="score-text">${m.puntosVisitante} - ${m.puntosLocal}</div>
                   <div class="status-text ${m.esEnVivo ? 'live' : ''}">${m.esEnVivo ? '🔴 ' + m.estado : m.estado}</div>
                 </div>
-                <span class="fav-btn ${esFav ? 'active' : ''}" onclick="toggleFav(event, '${m.id}')">⭐</span>
-              </div>
-              <div class="cat-insight">
-                <span>💡 ${m.insight}</span>
-              </div>
-            </div>
-          `;
-        }).join('');
-
-        groupEl.innerHTML = `
-          <div class="league-header">
-            <span>🏆 ${liga}</span>
-          </div>
-          ${matchesHtml}
-        `;
-
-        app.appendChild(groupEl);
-      }
-    }
-
-    function cambiarFecha(offset, btn) {
-      document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      cargarPartidos();
-    }
-
-    function filtrarDeporte(sportKey, btn) {
-      document.querySelectorAll('.sport-chip').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      deporteFiltroActual = sportKey;
-      cargarPartidos();
-    }
-
-    function abrirDetalleModal(id) {
-      const partido = baseDatosPartidos.find(e => e.id === id);
-      if (!partido) return;
-
-      document.getElementById('modalLeagueTitle').innerText = partido.ligaNombre.toUpperCase();
-      document.getElementById('modalVisitName').innerText = partido.equipoVisitante;
-      document.getElementById('modalVisitLogo').src = partido.logoVisitante;
-      document.getElementById('modalHomeName').innerText = partido.equipoLocal;
-      document.getElementById('modalHomeLogo').src = partido.logoLocal;
-      document.getElementById('modalScoreText').innerText = `${partido.puntosVisitante} - ${partido.puntosLocal}`;
-      document.getElementById('modalStatusText').innerText = partido.estado;
-      document.getElementById('modalAnalysisText').innerText = partido.insight;
-
-      document.getElementById('matchModal').classList.add('open');
-    }
-
-    function cerrarModal() {
-      document.getElementById('matchModal').classList.remove('open');
-    }
-
-    function toggleFav(e, id) {
-      e.stopPropagation();
-      if (favoritosIDs.includes(id)) {
-        favoritosIDs = favoritosIDs.filter(favId => favId !== id);
-      } else {
-        favoritosIDs.push(id);
-      }
-      localStorage.setItem('sportscat_favs', JSON.stringify(favoritosIDs));
-      cargarPartidos();
-    }
-
-    function cambiarSeccion(seccion, btn) {
-      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-      btn.classList.add('active');
-      vistaActual = seccion;
-      cargarPartidos();
-    }
-
-    // Carga inicial inmediata
-    cargarPartidos();
-  </script>
-</body>
-</html>
+                <span class=
