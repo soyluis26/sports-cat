@@ -42,6 +42,7 @@
     .muted { color: #aab3c7; }
     .match {
       background: #22293a;
+      border: 1px solid #30394b;
       border-radius: 10px;
       padding: 14px;
       margin-top: 10px;
@@ -55,105 +56,170 @@
       font-weight: bold;
     }
     .status { color: #ffad5c; font-size: 12px; }
-    a { color: #ffad5c; }
+    .team { flex: 1; }
+    .team:last-child { text-align: right; }
+    .score-number { color: #ff9638; white-space: nowrap; }
+    .error { color: #ff7777; }
   </style>
 </head>
 <body>
 <header>
-  <h1>🐱 Sports Cat</h1>
+  <h1>🐱 Sports Cat — NUEVA</h1>
   <p>Tu centro internacional de deportes en vivo</p>
 </header>
+
 <main>
   <div class="panel">
     <h2>Partidos y resultados</h2>
-    <p class="muted">Consulta encuentros de fútbol, NBA, MLB y NFL.</p>
+    <p class="muted">
+      Consulta encuentros de fútbol, NBA, MLB y NFL.
+    </p>
+
     <label for="sport">Deporte: </label>
     <select id="sport">
-      <option value="soccer">Fútbol</option>
+      <option value="soccer">Fútbol — Premier League</option>
       <option value="basketball">NBA</option>
       <option value="baseball">MLB</option>
       <option value="football">NFL</option>
     </select>
-    <p><button id="refresh">Actualizar resultados</button></p>
-    <p id="status" class="muted">Preparando conexión...</p>
+
+    <p>
+      <button id="refresh">Actualizar resultados</button>
+    </p>
+    <p id="status" class="muted">Conectando con la fuente deportiva...</p>
   </div>
+
   <section id="matches"></section>
+
   <div class="panel">
     <h3>Sobre Sports Cat</h3>
-    <p class="muted">Proyecto en desarrollo. Los resultados dependen de la disponibilidad de las fuentes de datos.</p>
+    <p class="muted">
+      Proyecto en desarrollo. Los resultados dependen de la
+      disponibilidad de las fuentes de datos.
+    </p>
   </div>
 </main>
+
 <script>
 const API = "https://site.api.espn.com/apis/site/v2/sports";
+
 const sports = {
-  soccer: { path: "soccer/eng.1", label: "Fútbol" },
-  basketball: { path: "basketball/nba", label: "NBA" },
-  baseball: { path: "baseball/mlb", label: "MLB" },
-  football: { path: "football/nfl", label: "NFL" }
+  soccer: {
+    path: "soccer/eng.1",
+    label: "Fútbol"
+  },
+  basketball: {
+    path: "basketball/nba",
+    label: "NBA"
+  },
+  baseball: {
+    path: "baseball/mlb",
+    label: "MLB"
+  },
+  football: {
+    path: "football/nfl",
+    label: "NFL"
+  }
 };
 
+const selector = document.getElementById("sport");
+const statusText = document.getElementById("status");
+const container = document.getElementById("matches");
+const refreshButton = document.getElementById("refresh");
+
 async function loadMatches() {
-  const selector = document.getElementById("sport");
   const sport = sports[selector.value];
-  const status = document.getElementById("status");
-  const container = document.getElementById("matches");
-  status.textContent = "Cargando resultados...";
-  container.innerHTML = "";
+
+  statusText.textContent = "Cargando resultados...";
+  statusText.className = "muted";
+  refreshButton.disabled = true;
+  container.replaceChildren();
 
   try {
     const response = await fetch(
       `${API}/${sport.path}/scoreboard`
     );
-    if (!response.ok) throw new Error("Fuente no disponible");
+
+    if (!response.ok) {
+      throw new Error("La fuente no respondió correctamente");
+    }
+
     const data = await response.json();
     const events = data.events || [];
 
     if (!events.length) {
-      status.textContent = "No hay partidos disponibles ahora.";
+      statusText.textContent =
+        "No hay partidos disponibles para esta competición ahora.";
       return;
     }
 
-    status.textContent = `${events.length} encuentros encontrados`;
+    statusText.textContent =
+      `${events.length} encuentros encontrados · ${sport.label}`;
+
     events.forEach(event => {
       const competitors =
         event.competitions?.[0]?.competitors || [];
-      const home = competitors.find(t => t.homeAway === "home");
-      const away = competitors.find(t => t.homeAway === "away");
+
+      const home = competitors.find(
+        team => team.homeAway === "home"
+      );
+
+      const away = competitors.find(
+        team => team.homeAway === "away"
+      );
+
+      const state =
+        event.status?.type?.shortDetail || "Programado";
+
       const date = event.date
-        ? new Date(event.date).toLocaleString("es")
+        ? new Date(event.date).toLocaleString("es-BR")
         : "Horario no disponible";
-      const state = event.status?.type?.shortDetail || "Programado";
 
       const card = document.createElement("article");
       card.className = "match";
-      const title = document.createElement("p");
-      title.className = "status";
-      title.textContent = `${sport.label} · ${state}`;
+
+      const heading = document.createElement("p");
+      heading.className = "status";
+      heading.textContent = `${sport.label} · ${state}`;
+
       const score = document.createElement("div");
       score.className = "score";
 
-      const team = t =>
-        `${t?.team?.displayName || "Por confirmar"} ${
-          t?.score ?? "-"
-        }`;
+      const homeName = document.createElement("span");
+      homeName.className = "team";
+      homeName.textContent =
+        home?.team?.displayName || "Local";
 
-      const teams = document.createElement("div");
-      teams.textContent = `${team(home)}  —  ${team(away)}`;
+      const numbers = document.createElement("span");
+      numbers.className = "score-number";
+      numbers.textContent =
+        `${home?.score ?? "-"} : ${away?.score ?? "-"}`;
+
+      const awayName = document.createElement("span");
+      awayName.className = "team";
+      awayName.textContent =
+        away?.team?.displayName || "Visitante";
+
       const time = document.createElement("p");
       time.className = "muted";
       time.textContent = date;
 
-      card.append(title, teams, time);
+      card.append(heading, score, time);
+      score.append(homeName, numbers, awayName);
       container.appendChild(card);
     });
   } catch (error) {
-    status.textContent =
-      "No se pudieron cargar los resultados. Comprueba la conexión e inténtalo de nuevo.";
+    statusText.textContent =
+      "No se pudieron cargar los resultados. Comprueba tu conexión e inténtalo de nuevo.";
+    statusText.className = "error";
+  } finally {
+    refreshButton.disabled = false;
   }
 }
 
-document.getElementById("refresh").addEventListener("click", loadMatches);
-document.getElementById("sport").addEventListener("change", loadMatches);
+refreshButton.addEventListener("click", loadMatches);
+selector.addEventListener("change", loadMatches);
+
 loadMatches();
 setInterval(loadMatches, 60000);
 </script>
