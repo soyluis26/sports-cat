@@ -2,226 +2,432 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#10131c">
-  <title>Sports Cat 🐱</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Sports Cat - TV & En Vivo</title>
+  <!-- HLS.js para reproducir transmisiones de TV en vivo en navegadores móviles -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
-    * { box-sizing: border-box; }
-    body {
+    :root {
+      --bg-main: #090d16;
+      --bg-card: #121824;
+      --bg-card-hover: #1a2234;
+      --border-color: #1e283d;
+      --accent-green: #00e676;
+      --accent-orange: #ff9f0a;
+      --accent-blue: #29b6f6;
+      --text-white: #ffffff;
+      --text-muted: #8d9bb0;
+    }
+
+    * {
+      box-sizing: border-box;
       margin: 0;
-      background: #10131c;
-      color: #f5f7ff;
-      font-family: Arial, sans-serif;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
     }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-white);
+      padding-bottom: 75px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
     header {
-      padding: 22px 16px;
-      background: #191e2b;
-      border-bottom: 2px solid #ff8a24;
-    }
-    h1 { margin: 0; color: #ff9638; }
-    header p { margin-bottom: 0; color: #b9c0d2; }
-    main { max-width: 850px; margin: auto; padding: 16px; }
-    .panel {
-      background: #191e2b;
-      border: 1px solid #30394b;
-      border-radius: 14px;
-      padding: 16px;
-      margin: 14px 0;
-    }
-    button, select {
-      background: #ff8a24;
-      color: #11131a;
-      border: 0;
-      border-radius: 9px;
-      padding: 12px;
-      font-weight: bold;
-      font-size: 15px;
-    }
-    button { cursor: pointer; }
-    select { max-width: 100%; }
-    .muted { color: #aab3c7; }
-    .match {
-      background: #22293a;
-      border: 1px solid #30394b;
-      border-radius: 10px;
-      padding: 14px;
-      margin-top: 10px;
-    }
-    .score {
+      width: 100%;
+      max-width: 680px;
+      background: rgba(9, 13, 22, 0.95);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 12px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 8px;
-      font-size: 17px;
-      font-weight: bold;
+      border-bottom: 1px solid var(--border-color);
     }
-    .status { color: #ffad5c; font-size: 12px; }
-    .team { flex: 1; }
-    .team:last-child { text-align: right; }
-    .score-number { color: #ff9638; white-space: nowrap; }
-    .error { color: #ff7777; }
+
+    .brand-badge {
+      background: linear-gradient(135deg, #ff9f0a, #ff5e3a);
+      color: #000;
+      font-weight: 900;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      letter-spacing: 1.2px;
+    }
+
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--accent-green);
+      background: rgba(0, 230, 118, 0.12);
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(0, 230, 118, 0.25);
+    }
+
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      background-color: var(--accent-green);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent-green);
+      animation: pulse 1.4s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.9); opacity: 0.7; }
+      50% { transform: scale(1.3); opacity: 1; }
+      100% { transform: scale(0.9); opacity: 0.7; }
+    }
+
+    main {
+      width: 100%;
+      max-width: 680px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Contenedor de la sección de partidos */
+    #seccion-partidos {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Contenedor de la sección de TV */
+    #seccion-tv {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .video-container {
+      width: 100%;
+      background: #000;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      aspect-ratio: 16 / 9;
+      position: sticky;
+      top: 60px;
+      z-index: 50;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .channels-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .channel-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .channel-card:active {
+      background: var(--bg-card-hover);
+      transform: scale(0.98);
+    }
+
+    .channel-card.active {
+      border-color: var(--accent-orange);
+      background: rgba(255, 159, 10, 0.08);
+    }
+
+    .channel-icon {
+      font-size: 1.5rem;
+    }
+
+    .channel-info h4 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-white);
+    }
+
+    .channel-info p {
+      font-size: 0.7rem;
+      color: var(--accent-green);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    /* Estilos tarjetas de partidos */
+    .league-group {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .league-header {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 10px 14px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-white);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .match-item {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .match-item:last-child { border-bottom: none; }
+
+    .match-main-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .match-teams {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .team-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .team-logo {
+      width: 22px;
+      height: 22px;
+      object-fit: contain;
+      border-radius: 4px;
+    }
+
+    .match-status-box {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+
+    .score-text {
+      font-weight: 800;
+      font-size: 1rem;
+    }
+
+    .status-text {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .status-text.live { color: var(--accent-green); }
+
+    .cat-insight {
+      background: rgba(255, 159, 10, 0.08);
+      border-left: 3px solid var(--accent-orange);
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 0.73rem;
+      color: #ffd280;
+    }
+
+    /* Barra de navegación inferior */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      max-width: 680px;
+      background: rgba(18, 24, 36, 0.98);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0;
+      z-index: 1000;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      color: var(--text-muted);
+      font-size: 0.68rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .nav-item.active {
+      color: var(--accent-orange);
+    }
   </style>
 </head>
 <body>
-<header>
-  <h1>🐱 Sports Cat — NUEVA</h1>
-  <p>Tu centro internacional de deportes en vivo</p>
-</header>
 
-<main>
-  <div class="panel">
-    <h2>Partidos y resultados</h2>
-    <p class="muted">
-      Consulta encuentros de fútbol, NBA, MLB y NFL.
-    </p>
+  <header>
+    <div class="brand-badge">SPORTS CAT TV</div>
+    <div class="live-badge">
+      <div class="pulse-dot"></div>
+      <span>TRANSMISIÓN HD</span>
+    </div>
+  </header>
 
-    <label for="sport">Deporte: </label>
-    <select id="sport">
-      <option value="soccer">Fútbol — Premier League</option>
-      <option value="basketball">NBA</option>
-      <option value="baseball">MLB</option>
-      <option value="football">NFL</option>
-    </select>
+  <main>
+    <!-- SECCIÓN 1: PARTIDOS -->
+    <div id="seccion-partidos">
+      <div class="league-group">
+        <div class="league-header">🏆 Partidos Destacados en Directo</div>
+        <div class="match-item">
+          <div class="match-main-row">
+            <div class="match-teams">
+              <div class="team-row"><img class="team-logo" src="https://a.espncdn.com/i/teamlogos/soccer/50/86.png"><span>Real Madrid</span></div>
+              <div class="team-row"><img class="team-logo" src="https://a.espncdn.com/i/teamlogos/soccer/50/382.png"><span>Man City</span></div>
+            </div>
+            <div class="match-status-box">
+              <div class="score-text">2 - 1</div>
+              <div class="status-text live">🔴 En Vivo</div>
+            </div>
+          </div>
+          <div class="cat-insight">💡 Transmitido en VIVO por ESPN y canales deportivos asociados.</div>
+        </div>
+      </div>
+    </div>
 
-    <p>
-      <button id="refresh">Actualizar resultados</button>
-    </p>
-    <p id="status" class="muted">Conectando con la fuente deportiva...</p>
-  </div>
+    <!-- SECCIÓN 2: TELEVISIÓN EN ESPAÑOL -->
+    <div id="seccion-tv">
+      <div class="video-container">
+        <video id="videoPlayer" controls autoplay playsinline></video>
+      </div>
+      <h3 style="font-size: 0.9rem; color: var(--accent-orange); margin-top: 4px;">📺 Canales Deportivos en Español</h3>
+      <div class="channels-grid" id="channelsGrid">
+        <!-- Los canales se cargan dinámicamente -->
+      </div>
+    </div>
+  </main>
 
-  <section id="matches"></section>
+  <nav class="bottom-nav">
+    <div class="nav-item active" onclick="cambiarTab('partidos', this)">
+      <span style="font-size: 1.2rem;">⚽</span>
+      <span>Partidos</span>
+    </div>
+    <div class="nav-item" onclick="cambiarTab('tv', this)">
+      <span style="font-size: 1.2rem;">📺</span>
+      <span>TV en Vivo</span>
+    </div>
+  </nav>
 
-  <div class="panel">
-    <h3>Sobre Sports Cat</h3>
-    <p class="muted">
-      Proyecto en desarrollo. Los resultados dependen de la
-      disponibilidad de las fuentes de datos.
-    </p>
-  </div>
-</main>
+  <script>
+    // Lista de canales de deportes en español (enlaces públicos HLS / M3U8 seguros)
+    const listaCanales = [
+      { nombre: 'ESPN LATAM', url: 'https://images.weserv.nl/?url=https://raw.githubusercontent.com/iptv-org/iptv/master/streams/lat_espn.m3u8', icono: '⚽' },
+      { nombre: 'ESPN 2', url: 'https://images.weserv.nl/?url=https://raw.githubusercontent.com/iptv-org/iptv/master/streams/lat_espn2.m3u8', icon: '🏀' },
+      { nombre: 'Fox Sports MX', url: 'https://images.weserv.nl/?url=https://raw.githubusercontent.com/iptv-org/iptv/master/streams/mx_foxsports.m3u8', icono: '🏎️' },
+      { nombre: 'TUDN México', url: 'https://images.weserv.nl/?url=https://raw.githubusercontent.com/iptv-org/iptv/master/streams/mx_tudn.m3u8', icono: '🇲🇽' },
+      { nombre: 'Win Sports+', url: 'https://images.weserv.nl/?url=https://raw.githubusercontent.com/iptv-org/iptv/master/streams/co_winsports.m3u8', icono: '🇨🇴' },
+      { name: 'TyC Sports', url: 'https://images.weserv.nl/?url=https://raw.githubusercontent.com/iptv-org/iptv/master/streams/ar_tycsports.m3u8', icono: '🇦🇷' }
+    ];
 
-<script>
-const API = "https://site.api.espn.com/apis/site/v2/sports";
+    let hlsInstance = null;
 
-const sports = {
-  soccer: {
-    path: "soccer/eng.1",
-    label: "Fútbol"
-  },
-  basketball: {
-    path: "basketball/nba",
-    label: "NBA"
-  },
-  baseball: {
-    path: "baseball/mlb",
-    label: "MLB"
-  },
-  football: {
-    path: "football/nfl",
-    label: "NFL"
-  }
-};
+    function cambiarTab(tab, btn) {
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
 
-const selector = document.getElementById("sport");
-const statusText = document.getElementById("status");
-const container = document.getElementById("matches");
-const refreshButton = document.getElementById("refresh");
+      const secPartidos = document.getElementById('seccion-partidos');
+      const secTv = document.getElementById('seccion-tv');
 
-async function loadMatches() {
-  const sport = sports[selector.value];
-
-  statusText.textContent = "Cargando resultados...";
-  statusText.className = "muted";
-  refreshButton.disabled = true;
-  container.replaceChildren();
-
-  try {
-    const response = await fetch(
-      `${API}/${sport.path}/scoreboard`
-    );
-
-    if (!response.ok) {
-      throw new Error("La fuente no respondió correctamente");
+      if (tab === 'partidos') {
+        secPartidos.style.display = 'flex';
+        secTv.style.display = 'none';
+      } else {
+        secPartidos.style.display = 'none';
+        secTv.style.display = 'flex';
+        if (!document.getElementById('channelsGrid').hasChildNodes()) {
+          inicializarCanales();
+        }
+      }
     }
 
-    const data = await response.json();
-    const events = data.events || [];
+    function inicializarCanales() {
+      const grid = document.getElementById('channelsGrid');
+      grid.innerHTML = '';
 
-    if (!events.length) {
-      statusText.textContent =
-        "No hay partidos disponibles para esta competición ahora.";
-      return;
+      listaCanales.forEach((canal, index) => {
+        const card = document.createElement('div');
+        card.className = 'channel-card' + (index === 0 ? ' active' : '');
+        card.innerHTML = `
+          <div class="channel-icon">${canal.icono || '📺'}</div>
+          <div class="channel-info">
+            <h4>${canal.nombre}</h4>
+            <p>● En Directo</p>
+          </div>
+        `;
+        card.onclick = () => {
+          document.querySelectorAll('.channel-card').forEach(c => c.classList.remove('active'));
+          card.classList.add('active');
+          reproducirCanal(canal.url);
+        };
+        grid.appendChild(card);
+      });
+
+      // Reproducir el primer canal por defecto
+      if (listaCanales.length > 0) {
+        reproducirCanal(listaCanales[0].url);
+      }
     }
 
-    statusText.textContent =
-      `${events.length} encuentros encontrados · ${sport.label}`;
+    function reproducirCanal(url) {
+      const video = document.getElementById('videoPlayer');
+      
+      if (hlsInstance) {
+        hlsInstance.destroy();
+      }
 
-    events.forEach(event => {
-      const competitors =
-        event.competitions?.[0]?.competitors || [];
-
-      const home = competitors.find(
-        team => team.homeAway === "home"
-      );
-
-      const away = competitors.find(
-        team => team.homeAway === "away"
-      );
-
-      const state =
-        event.status?.type?.shortDetail || "Programado";
-
-      const date = event.date
-        ? new Date(event.date).toLocaleString("es-BR")
-        : "Horario no disponible";
-
-      const card = document.createElement("article");
-      card.className = "match";
-
-      const heading = document.createElement("p");
-      heading.className = "status";
-      heading.textContent = `${sport.label} · ${state}`;
-
-      const score = document.createElement("div");
-      score.className = "score";
-
-      const homeName = document.createElement("span");
-      homeName.className = "team";
-      homeName.textContent =
-        home?.team?.displayName || "Local";
-
-      const numbers = document.createElement("span");
-      numbers.className = "score-number";
-      numbers.textContent =
-        `${home?.score ?? "-"} : ${away?.score ?? "-"}`;
-
-      const awayName = document.createElement("span");
-      awayName.className = "team";
-      awayName.textContent =
-        away?.team?.displayName || "Visitante";
-
-      const time = document.createElement("p");
-      time.className = "muted";
-      time.textContent = date;
-
-      card.append(heading, score, time);
-      score.append(homeName, numbers, awayName);
-      container.appendChild(card);
-    });
-  } catch (error) {
-    statusText.textContent =
-      "No se pudieron cargar los resultados. Comprueba tu conexión e inténtalo de nuevo.";
-    statusText.className = "error";
-  } finally {
-    refreshButton.disabled = false;
-  }
-}
-
-refreshButton.addEventListener("click", loadMatches);
-selector.addEventListener("change", loadMatches);
-
-loadMatches();
-setInterval(loadMatches, 60000);
-</script>
+      if (Hls.isSupported()) {
+        hlsInstance = new Hls();
+        hlsInstance.loadSource(url);
+        hlsInstance.attachMedia(video);
+        hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+          video.play().catch(() => {});
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = url;
+        video.addEventListener('loadedmetadata', () => {
+          video.play().catch(() => {});
+        });
+      }
+    }
+  </script>
 </body>
 </html>
